@@ -1,0 +1,21 @@
+#!/bin/sh
+
+set -eu
+
+echo "Updating OpenJDK @SLOT@ keystore ..."
+
+tmpDir="$( mktemp -d )"
+tmpCacerts="${tmpDir}"/cacerts
+echo "${tmpDir}"
+
+export JAVA_HOME="@JAVA_HOME@"
+
+for pem_file in *.pem ; do
+	if [ -e "${pem_file}" ] ; then
+		"${JAVA_HOME}"/bin/keytool -noprompt -import -alias "$( basename "${pem_file}" .pem )" -keystore "${tmpCacerts}" -storepass "changeit" -file "${pem_file}"
+	fi
+done
+
+chmod 644 "${tmpCacerts}"
+mv -f "${tmpCacerts}" "${JAVA_HOME}"/jre/lib/security
+rm -rf "${tmpDir}"
