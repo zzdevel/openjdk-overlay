@@ -65,7 +65,6 @@ COMMON_DEP=">=media-libs/alsa-lib-0.9.1
     x11-proto/xproto
     x11-proto/inputproto
     x11-proto/randrproto
-    virtual/libstdc++
     sys-libs/zlib
     media-libs/giflib
     cacerts? ( app-misc/ca-certificates )"
