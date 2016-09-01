@@ -10,28 +10,59 @@ HOMEPAGE="http://openjdk.java.net/projects/jdk8/"
 jdk_major="$( get_version_component_range 2 "${PV}" )"
 jdk_update="$( get_version_component_range 4 "${PV}" )"
 
-# this needs to be updated manually with new version
-jdk_b="17"
+jdk_project_base="jdk${jdk_major}u"
 
-jdk_full_name="jdk${jdk_major}u${jdk_update}-b${jdk_b}"
+#### this needs to be updated manually with new version ####
+
+jdk_b="14"
+
+# set to ${jdk_project_base} if project does not have required version
+jdk_project_aarch32_port="aarch32-port"
+jdk_project_aarch64_port="aarch64-port"
+
+# set to blank if project does not have required version (or has no pre/suffix)
+jdk_aarch32_port_suffix="-aarch32-160812"
+jdk_aarch64_port_prefix="aarch64-"
+
+############################################################
+
+jdk_tag_base="jdk${jdk_major}u${jdk_update}-b${jdk_b}"
+jdk_tag_aarch32_port="${jdk_tag_base}${jdk_aarch32_port_suffix}"
+jdk_tag_aarch64_port="${jdk_aarch64_port_prefix}${jdk_tag_base}"
+
+function get_jdk_tag_name {
+    if use aarch32-port ; then
+        echo -n "${jdk_tag_aarch32_port}"
+    elif use aarch64-port ; then
+        echo -n "${jdk_tag_aarch64_port}"
+    else
+        echo -n "${jdk_tag_base}"
+    fi
+}
+
+jdk_tag_name="$( get_jdk_tag_name )"
 jdk_subprojects="corba hotspot jaxp jaxws jdk langtools nashorn"
 
 function generate_uris {
-    local jdk_base_uri="http://hg.openjdk.java.net/jdk${jdk_major}u/jdk${jdk_major}u"
+    local projectName="${1}"
+    local tag="${2}"
 
-    echo "${jdk_base_uri}/archive/${jdk_full_name}.tar.bz2 -> ${P}.tar.bz2"
+    local jdk_base_uri="http://hg.openjdk.java.net/${projectName}/jdk${jdk_major}u"
+    echo "${jdk_base_uri}/archive/${tag}.tar.bz2 -> ${P}-${projectName}.tar.bz2"
     for subproject in ${jdk_subprojects} ; do
-        echo "http://hg.openjdk.java.net/jdk${jdk_major}u/jdk${jdk_major}u/${subproject}/archive/${jdk_full_name}.tar.bz2 -> ${P}-${subproject}.tar.bz2"
+        echo "${jdk_base_uri}/${subproject}/archive/${tag}.tar.bz2 -> ${P}-${projectName}-${subproject}.tar.bz2"
     done
 }
 
-SRC_URI="$( generate_uris )"
+SRC_URI="!aarch32-port? ( !aarch64-port? ( $( generate_uris "${jdk_project_base}" "${jdk_tag_base}" ) ) )
+    aarch32-port? ( $( generate_uris "${jdk_project_aarch32_port}" "${jdk_tag_aarch32_port}" ) )
+    aarch64-port? ( $( generate_uris "${jdk_project_aarch64_port}" "${jdk_tag_aarch64_port}" ) )"
 
 LICENSE="GPL-2-with-linking-exception"
 SLOT="$( get_version_component_range 1-2 "${PV}" )"
-KEYWORDS="~x86 ~amd64 ~arm"
+KEYWORDS="~x86 ~amd64 ~arm ~arm64"
 
-IUSE="+cacerts doc source examples webstart nsplugin"
+IUSE="+cacerts doc source examples webstart nsplugin aarch32-port aarch64-port"
 
 COMMON_DEP=">=media-libs/alsa-lib-0.9.1
     >=media-libs/freetype-2.3
@@ -85,10 +116,10 @@ pkg_setup(){
 
 src_unpack() {
     unpack ${A}
-    mv "jdk8u-${jdk_full_name}" "${P}"
+    mv "jdk8u-${jdk_tag_name}" "${P}"
 
     for subproject in ${jdk_subprojects} ; do
-        mv "${subproject}-${jdk_full_name}" "${P}/${subproject}"
+        mv "${subproject}-${jdk_tag_name}" "${P}/${subproject}"
     done
 }
 
