@@ -123,8 +123,13 @@ src_unpack() {
 }
 
 src_configure() {
+    local conf_args=""
+    if use aarch32-port ; then
+        conf_args="--with-jvm-variants=core"
+    fi
+
     chmod +x ./configure
-    econf \
+    econf ${conf_args} \
     --with-milestone="fcs" \
     --with-update-version=${jdk_update} \
     --with-build-number=${jdk_b} \
