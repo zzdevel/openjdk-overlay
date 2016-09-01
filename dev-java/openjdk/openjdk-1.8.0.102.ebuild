@@ -30,17 +30,6 @@ jdk_tag_base="jdk${jdk_major}u${jdk_update}-b${jdk_b}"
 jdk_tag_aarch32_port="${jdk_tag_base}${jdk_aarch32_port_suffix}"
 jdk_tag_aarch64_port="${jdk_aarch64_port_prefix}${jdk_tag_base}"
 
-function get_jdk_tag_name {
-    if use aarch32-port ; then
-        echo -n "${jdk_tag_aarch32_port}"
-    elif use aarch64-port ; then
-        echo -n "${jdk_tag_aarch64_port}"
-    else
-        echo -n "${jdk_tag_base}"
-    fi
-}
-
-jdk_tag_name="$( get_jdk_tag_name )"
 jdk_subprojects="corba hotspot jaxp jaxws jdk langtools nashorn"
 
 function generate_uris {
@@ -101,6 +90,15 @@ DEPEND="|| (
 PDEPEND="webstart? ( dev-java/icedtea-web:0[icedtea7] )
     nsplugin? ( dev-java/icedtea-web:0[icedtea7,nsplugin] )"
 
+function get_jdk_tag_name {
+    if use aarch32-port ; then
+        echo -n "${jdk_tag_aarch32_port}"
+    elif use aarch64-port ; then
+        echo -n "${jdk_tag_aarch64_port}"
+    else
+        echo -n "${jdk_tag_base}"
+    fi
+}
 
 pkg_setup(){
     JAVA_PKG_WANT_SOURCE="1.7"
@@ -115,6 +113,8 @@ pkg_setup(){
 }
 
 src_unpack() {
+    local jdk_tag_name="$( get_jdk_tag_name )"
+
     unpack ${A}
     mv "jdk8u-${jdk_tag_name}" "${P}"
 
