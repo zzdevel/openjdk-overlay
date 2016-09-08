@@ -51,7 +51,7 @@ LICENSE="GPL-2-with-linking-exception"
 SLOT="$( get_version_component_range 1-2 "${PV}" )"
 KEYWORDS="~x86 ~amd64 ~arm ~arm64"
 
-IUSE="+cacerts doc source examples webstart nsplugin aarch32-port aarch64-port"
+IUSE="+cacerts doc source examples webstart nsplugin arm? ( aarch32-port ) arm64? ( aarch64-port )"
 
 COMMON_DEP=">=media-libs/alsa-lib-0.9.1
     >=media-libs/freetype-2.3
@@ -99,6 +99,17 @@ function get_jdk_tag_name {
     fi
 }
 
+jit_use_flags="x86 amd64 aarch64-port"
+
+function supports_JIT {
+    local flag
+    for flag in ${jit_use_flags} ; do
+        use "${flag}" && return 0
+    done
+    return 1
+}
+
+
 pkg_setup(){
     JAVA_PKG_WANT_SOURCE="1.7"
     JAVA_PKG_WANT_TARGET="1.7"
@@ -124,15 +135,21 @@ src_unpack() {
 
 src_configure() {
     local conf_args=""
-    if use aarch32-port ; then
-        conf_args="--with-jvm-variants=core"
+    if ! supports_JIT ; then
+        if use aarch32-port ; then
+            conf_args="--with-jvm-variants=core"
+        else
+            conf_args="--with-jvm-variants=zero"
+        fi
     fi
+
+    export LANG=C
 
     chmod +x ./configure
     econf ${conf_args} \
     --with-milestone="fcs" \
     --with-update-version=${jdk_update} \
-    --with-build-number=${jdk_b} \
+    --with-build-number=b${jdk_b} \
     --with-stdc++lib=dynamic \
     --with-zlib=system \
     --with-giflib=system \
@@ -213,3 +230,4 @@ pkg_postinst() {
         update-ca-certificates
     fi
 }
+

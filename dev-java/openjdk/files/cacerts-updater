@@ -6,7 +6,6 @@ echo "Updating OpenJDK @SLOT@ keystore ..."
 
 tmpDir="$( mktemp -d )"
 tmpCacerts="${tmpDir}"/cacerts
-echo "${tmpDir}"
 
 export JAVA_HOME="@JAVA_HOME@"
 
