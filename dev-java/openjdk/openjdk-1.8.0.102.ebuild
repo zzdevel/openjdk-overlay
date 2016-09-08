@@ -53,7 +53,7 @@ KEYWORDS="~x86 ~amd64 ~arm ~arm64"
 
 IUSE="+cacerts doc source examples webstart nsplugin aarch32-port aarch64-port"
 
-REQUIRED_USE="arm? ( aarch32-port ) arm64? ( aarch64-port )"
+REQUIRED_USE="aarch32-port? ( arm ) aarch64-port? ( arm64 )"
 
 COMMON_DEP=">=media-libs/alsa-lib-0.9.1
     >=media-libs/freetype-2.3
