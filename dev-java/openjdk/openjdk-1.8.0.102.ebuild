@@ -145,10 +145,8 @@ src_configure() {
         fi
     fi
 
-    export LANG=C
-
     chmod +x ./configure
-    econf ${conf_args} \
+    LANG=C econf ${conf_args} \
     --with-milestone="fcs" \
     --with-update-version=${jdk_update} \
     --with-build-number=b${jdk_b} \
@@ -162,7 +160,7 @@ src_configure() {
 }
 
 src_compile() {
-    emake -j1 all
+    LANG=C emake -j1 all
 }
 
 src_install() {
