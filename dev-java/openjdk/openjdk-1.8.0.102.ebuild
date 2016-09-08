@@ -51,7 +51,9 @@ LICENSE="GPL-2-with-linking-exception"
 SLOT="$( get_version_component_range 1-2 "${PV}" )"
 KEYWORDS="~x86 ~amd64 ~arm ~arm64"
 
-IUSE="+cacerts doc source examples webstart nsplugin arm? ( aarch32-port ) arm64? ( aarch64-port )"
+IUSE="+cacerts doc source examples webstart nsplugin aarch32-port aarch64-port"
+
+REQUIRED_USE="arm? ( aarch32-port ) arm64? ( aarch64-port )"
 
 COMMON_DEP=">=media-libs/alsa-lib-0.9.1
     >=media-libs/freetype-2.3
