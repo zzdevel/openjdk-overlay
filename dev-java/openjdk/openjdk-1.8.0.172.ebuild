@@ -159,7 +159,9 @@ src_configure() {
     --disable-debug-symbols \
     --disable-zip-debug-info \
     --with-debug-level=release \
-    --enable-unlimited-crypto
+    --enable-unlimited-crypto \
+    --with-extra-cflags="-Wno-error" \
+    --with-extra-cxxflags="-Wno-error"
 }
 
 src_compile() {
