@@ -40,7 +40,7 @@ generate_uris() {
     local tag="${3}"
 
     local jdk_base_uri="http://hg.openjdk.java.net/${projectName}/jdk${jdk_major}u${forrestSuffix}"
-    echo "${jdk_base_uri}/archive/${tag}.tar.bz2 -> ${P}-${projectName}.tar.bz2"
+    echo "${jdk_base_uri}/archive/${tag}.tar.bz2 -> ${P}.${jdk_b}-${projectName}${forrestSuffix}.tar.bz2"
     for subproject in ${jdk_subprojects} ; do
         echo "${jdk_base_uri}/${subproject}/archive/${tag}.tar.bz2 -> ${P}.${jdk_b}-${projectName}${forrestSuffix}-${subproject}.tar.bz2"
     done
@@ -126,7 +126,7 @@ supports_JIT_C2() {
 }
 
 supports_JIT_C1() {
-    use arm && use aarch32_port && return 0
+    use arm && use aarch32-port && return 0
     return 1
 }
 
@@ -243,13 +243,13 @@ src_install() {
     java-vm_set-pax-markings "${jdk_dest}"
 
     if supports_JIT_C2 ; then
-        if [ "${ARCH}" = "x86" ] ; then
+        if use x86 ; then
             ${jdk_dest}/bin/java -client -Xshare:dump || die
             # limit heap size for large memory on x86 #467518
             # this is a workaround and shouldn't be needed.
             ${jdk_dest}/bin/java -server -Xms64m -Xmx64m -Xshare:dump || die
         else
-            if ! [ "${ARCH}" = "ppc64" ] && ! [ "${ARCH}" = "ppc" ] ; then
+            if ! use ppc64 && ! use ppc ; then
                 ${jdk_dest}/bin/java -server -Xshare:dump || die
             fi
         fi
