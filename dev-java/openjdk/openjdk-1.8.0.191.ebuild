@@ -136,7 +136,7 @@ pkg_setup() {
     JAVA_PKG_WANT_TARGET="1.7"
 
     use aarch32-port && [ "${jdk_project_aarch32_port}" = "${jdk_project_base}" ] && die "${PN} version ${PV} is not available for aarch32 port"
-    use aarch64-port-shenandoah && [ "${jdk_project_aarch64_port}" = "${jdk_project_base}" ] && die "${PN} version ${PV} is not available for aarch64 shanandoah port"
+    use aarch64-port-shenandoah && [ "${jdk_project_aarch64_port_shenandoah}" = "${jdk_project_base}" ] && die "${PN} version ${PV} is not available for aarch64 shanandoah port"
 
     addpredict "/dev/random"
     addpredict "/dev/urandom"
