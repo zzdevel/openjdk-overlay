@@ -5,7 +5,7 @@ EAPI=5
 inherit java-pkg-2 java-vm-2 versionator
 
 DESCRIPTION="OpenJDK"
-HOMEPAGE="http://openjdk.java.net/projects/jdk8/"
+HOMEPAGE="https://openjdk.java.net/projects/jdk8u/"
 
 jdk_major="$( get_version_component_range 2 "${PV}" )"
 jdk_update="$( get_version_component_range 4 "${PV}" )"
@@ -16,39 +16,41 @@ jdk_project_base="jdk${jdk_major}u"
 
 jdk_b="12"
 
-# set to ${jdk_project_base} if port does not have required version
+# set to ${jdk_project_base} if project does not have required version (tag)
 jdk_project_aarch32_port="aarch32-port"
 jdk_project_aarch64_port_shenandoah="aarch64-port"
 
-# set to blank if port does not have required version (or tag has no pre/suffix)
+# set to blank if project does not have required tag (or there is no pre/suffix)
 jdk_tag_suffix_aarch32_port="-aarch32-181022"
 jdk_tag_prefix_aarch64_port_shenandoah="aarch64-shenandoah-"
 
 ############################################################
 
-jdk_tag_base="jdk${jdk_major}u${jdk_update}-b${jdk_b}"
+jdk_tag_base="${jdk_project_base}${jdk_update}-b${jdk_b}"
 jdk_tag_aarch32_port="${jdk_tag_base}${jdk_tag_suffix_aarch32_port}"
 jdk_tag_aarch64_port_shenandoah="${jdk_tag_prefix_aarch64_port_shenandoah}${jdk_tag_base}"
 
-jdk_forrest_suffix_aarch64_port_shenandoah="-shenandoah"
+jdk_forest_base="${jdk_project_base}"
+jdk_forest_aarch32_port="${jdk_forest_base}"
+jdk_forest_aarch64_port_shenandoah="${jdk_forest_base}-shenandoah"
 
 jdk_subprojects="corba hotspot jaxp jaxws jdk langtools nashorn"
 
 generate_uris() {
     local projectName="${1}"
-    local forrestSuffix="${2}"
+    local forestName="${2}"
     local tag="${3}"
 
-    local jdk_base_uri="http://hg.openjdk.java.net/${projectName}/jdk${jdk_major}u${forrestSuffix}"
-    echo "${jdk_base_uri}/archive/${tag}.tar.bz2 -> ${P}.${jdk_b}-${projectName}${forrestSuffix}.tar.bz2"
+    local jdk_base_uri="http://hg.openjdk.java.net/${projectName}/${forestName}"
+    printf '%s\n' "${jdk_base_uri}/archive/${tag}.tar.bz2 -> ${P}_${projectName}_${forestName}_${tag}.tar.bz2"
     for subproject in ${jdk_subprojects} ; do
-        echo "${jdk_base_uri}/${subproject}/archive/${tag}.tar.bz2 -> ${P}.${jdk_b}-${projectName}${forrestSuffix}-${subproject}.tar.bz2"
+        printf '%s\n' "${jdk_base_uri}/${subproject}/archive/${tag}.tar.bz2 -> ${P}_${projectName}_${forestName}_${subproject}_${tag}.tar.bz2"
     done
 }
 
-SRC_URI="!aarch32-port? ( !aarch64-port-shenandoah? ( $( generate_uris "${jdk_project_base}" "" "${jdk_tag_base}" ) ) )
-    aarch32-port? ( $( generate_uris "${jdk_project_aarch32_port}" "" "${jdk_tag_aarch32_port}" ) )
-    aarch64-port-shenandoah? ( $( generate_uris "${jdk_project_aarch64_port_shenandoah}" "${jdk_forrest_suffix_aarch64_port_shenandoah}" "${jdk_tag_aarch64_port_shenandoah}" ) )"
+SRC_URI="!aarch32-port? ( !aarch64-port-shenandoah? ( $( generate_uris "${jdk_project_base}" "${jdk_forest_base}" "${jdk_tag_base}" ) ) )
+    aarch32-port? ( $( generate_uris "${jdk_project_aarch32_port}" "${jdk_forest_aarch32_port}" "${jdk_tag_aarch32_port}" ) )
+    aarch64-port-shenandoah? ( $( generate_uris "${jdk_project_aarch64_port_shenandoah}" "${jdk_forest_aarch64_port_shenandoah}" "${jdk_tag_aarch64_port_shenandoah}" ) )"
 
 LICENSE="GPL-2-with-linking-exception"
 SLOT="$( get_version_component_range 1-2 "${PV}" )"
@@ -90,29 +92,26 @@ DEPEND="|| (
     pax_kernel? ( sys-apps/paxctl )
     ${COMMON_DEP}"
 
-function get_jdk_tag_name {
+
+get_forest_name() {
     if use aarch32-port ; then
-        echo -n "${jdk_tag_aarch32_port}"
+       printf '%s' "${jdk_forest_aarch32_port}"
     elif use aarch64-port-shenandoah ; then
-        echo -n "${jdk_tag_aarch64_port_shenandoah}"
+       printf '%s' "${jdk_forest_aarch64_port_shenandoah}"
     else
-        echo -n "${jdk_tag_base}"
+       printf '%s' "${jdk_forest_base}"
     fi
 }
 
-get_unpacked_name() {
-    local subproject="${1}"
-
+get_tag_name() {
     if use aarch32-port ; then
-        printf '%s' "${subproject}-${jdk_tag_aarch32_port}"
+        printf '%s' "${jdk_tag_aarch32_port}"
     elif use aarch64-port-shenandoah ; then
-        printf '%s' "${subproject}-${jdk_tag_aarch64_port_shenandoah}"
+        printf '%s' "${jdk_tag_aarch64_port_shenandoah}"
     else
-        printf '%s' "${subproject}-${jdk_tag_base}"
+        printf '%s' "${jdk_tag_base}"
     fi
 }
-
-
 
 jit_archs="x86 amd64"
 
@@ -150,14 +149,12 @@ pkg_setup() {
 src_unpack() {
     unpack ${A}
 
-    local jdk_forrest_suffix=""
-    if use aarch64-port-shenandoah ; then
-       jdk_forrest_suffix="${jdk_forrest_suffix_aarch64_port_shenandoah}"
-    fi
+    local jdk_forest="$( get_forest_name )"
+    local jdk_tag="$( get_tag_name )"
 
-    mv "$( get_unpacked_name "jdk8u${jdk_forrest_suffix}" )" "${P}"
+    mv "${jdk_forest}-${jdk_tag}" "${P}"
     for subproject in ${jdk_subprojects} ; do
-        mv "$( get_unpacked_name "${subproject}" )" "${P}/${subproject}"
+        mv "${subproject}-${jdk_tag}" "${P}/${subproject}"
     done
 }
 
@@ -179,7 +176,7 @@ src_configure() {
     --with-stdc++lib=dynamic \
     --with-zlib=system \
     --with-giflib=system \
-    --disable-debug-symbols \
+    --enable-debug-symbols \
     --disable-zip-debug-info \
     --with-debug-level=release \
     --enable-unlimited-crypto \
@@ -268,4 +265,3 @@ pkg_postinst() {
         update-ca-certificates
     fi
 }
-
